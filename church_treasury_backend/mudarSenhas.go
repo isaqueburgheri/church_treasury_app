@@ -1,4 +1,4 @@
-package senha
+package mudarSenhas
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func senha() {
+func mudarSenhas() {
 	password := "1234" // Sua nova senha
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

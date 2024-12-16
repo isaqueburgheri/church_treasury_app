@@ -1,70 +1,129 @@
-import 'package:flutter/material.dart'; // Importa o pacote para trabalhar com a interface gráfica do Flutter.
-import 'package:http/http.dart' as http; // Importa o pacote HTTP para fazer requisições HTTP.
-import 'dart:convert'; // Importa o pacote para manipulação de JSON.
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:convert' as convert; // Para manipulação de base64
 
 void main() {
-  runApp(MyApp()); // Função que inicializa o aplicativo.
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tesouraria', // Título do aplicativo.
-      home: LoginPage(), // Define a página inicial como a página de login.
+      title: 'Tesouraria',
+      home: LoginPage(),
     );
   }
 }
 
 class LoginPage extends StatefulWidget {
   @override
-  _LoginPageState createState() => _LoginPageState(); // Cria o estado da página de login.
+  _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _usernameController = TextEditingController(); // Controlador para o campo de usuário.
-  final TextEditingController _passwordController = TextEditingController(); // Controlador para o campo de senha.
-  String? _errorMessage; // Variável para armazenar mensagens de erro, se houver.
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  String? _errorMessage;
 
   // Função assíncrona para realizar o login
   Future<void> _login() async {
-    final username = _usernameController.text; // Obtém o nome de usuário inserido.
-    final password = _passwordController.text; // Obtém a senha inserida.
+    final username = _usernameController.text;
+    final password = _passwordController.text;
 
     try {
-      // Faz uma requisição HTTP POST para a API de login.
       final response = await http.post(
         Uri.parse('http://10.2.3.221:8080/login'), // URL da API de login (substitua pelo IP correto).
-        headers: {'Content-Type': 'application/json'}, // Define o cabeçalho para JSON.
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'username': username, // Envia o nome de usuário no corpo da requisição.
-          'password': password, // Envia a senha no corpo da requisição.
+          'username': username,
+          'password': password,
         }),
       );
 
-      // Verifica se o status da resposta é 200 (OK).
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body); // Decodifica o corpo da resposta.
-        final token = data['token']; // Obtém o token JWT retornado pela API.
+        final data = jsonDecode(response.body);
+        final token = data['token'];
 
-        // Se o login for bem-sucedido, navega para a HomePage e passa o token.
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(token: token), // Passa o token para a HomePage.
-          ),
-        );
+        // Exibe o token no console para depuração
+        print('Token obtido: $token');
+
+        // Decodificar o token para obter o role
+        final role = await _getRoleFromToken(token);
+
+        // Exibe o role no console para depuração
+        print('Role do usuário: $role');
+
+        // Navegar para a página correta baseado no role
+        if (role == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AdminHomePage(token: token)),
+          );
+        } else if (role == 'user') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => UserHomePage(token: token)),
+          );
+        } else {
+          _showErrorDialog(context, 'Papel desconhecido');
+        }
       } else {
-        // Se a resposta não for 200, exibe uma mensagem de erro.
         setState(() {
           _errorMessage = 'Login falhou: ${response.statusCode}';
         });
       }
     } catch (e) {
-      // Se ocorrer algum erro durante a requisição (ex: falta de conexão), exibe a mensagem de erro.
       setState(() {
         _errorMessage = 'Erro ao conectar: $e';
       });
+    }
+  }
+
+  // Função para mostrar um erro
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Erro'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            child: Text('OK'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Função para decodificar o role do token JWT
+  Future<String> _getRoleFromToken(String token) async {
+    try {
+      // Divida o token JWT em três partes (header, payload, signature)
+      final parts = token.split('.');
+
+      // Certifique-se de que o token tem três partes
+      if (parts.length != 3) {
+        print('Token mal formatado!');
+        return 'user'; // Role default caso o token esteja mal formatado
+      }
+
+      // Decodifique o payload do token, que é a segunda parte
+      final payload = base64Url.decode(base64Url.normalize(parts[1]));
+      final payloadMap = json.decode(utf8.decode(payload));
+
+      // Verifique se o payload contém a chave 'role'
+      final role = payloadMap['role'] ?? 'user';
+      print('Payload decodificado: $payloadMap');
+      return role;
+    } catch (e) {
+      // Se houver algum erro ao decodificar, trate e retorne 'user' como padrão
+      print('Erro ao decodificar token: $e');
+      return 'user'; // Caso de erro, assume que o usuário é comum
     }
   }
 
@@ -72,38 +131,34 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login - Tesouraria'), // Título da barra superior.
+        title: Text('Login - Tesouraria'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0), // Adiciona um padding ao redor da tela.
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Centraliza os elementos na tela.
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Campo para o nome de usuário.
             TextField(
-              controller: _usernameController, // Controlador para o campo.
-              decoration: InputDecoration(labelText: 'Usuário'), // Label do campo.
+              controller: _usernameController,
+              decoration: InputDecoration(labelText: 'Usuário'),
             ),
-            // Campo para a senha.
             TextField(
-              controller: _passwordController, // Controlador para o campo.
-              decoration: InputDecoration(labelText: 'Senha'), // Label do campo.
-              obscureText: true, // Oculta a senha à medida que o usuário digita.
+              controller: _passwordController,
+              decoration: InputDecoration(labelText: 'Senha'),
+              obscureText: true,
             ),
-            // Exibe a mensagem de erro, se houver.
             if (_errorMessage != null)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(
-                  _errorMessage!, // Exibe a mensagem de erro.
-                  style: TextStyle(color: Colors.red), // Estilo para a mensagem de erro (cor vermelha).
+                  _errorMessage!,
+                  style: TextStyle(color: Colors.red),
                 ),
               ),
-            SizedBox(height: 16), // Espaçamento entre os elementos.
-            // Botão de login que chama a função _login quando pressionado.
+            SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _login, // Chama a função _login.
-              child: Text('Login'), // Texto do botão.
+              onPressed: _login,
+              child: Text('Login'),
             ),
           ],
         ),
@@ -112,22 +167,87 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-class HomePage extends StatelessWidget {
-  final String token; // Variável para armazenar o token JWT.
+// PAGINA HOME DO ADMIN
+class AdminHomePage extends StatelessWidget {
+  final String token;
 
-  HomePage({required this.token}); // Construtor que recebe o token.
+  AdminHomePage({required this.token});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bem-vindo pequeno gafanhoto!'), // Título da página de boas-vindas.
+        title: Text('Admin Home'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+                (Route<dynamic> route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: Center(
-        // Exibe o token JWT na tela.
-        child: Text(
-          'Token JWT: $token', // Texto que mostra o token recebido.
-          textAlign: TextAlign.center, // Centraliza o texto.
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Imagem carregada da web
+            Image.network(
+              'https://media1.giphy.com/media/gfZ9ClheLUDQKIJmEH/200w.gif', // Substitua pela URL da imagem do Admin
+              width: 300, // Ajuste o tamanho conforme necessário
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            SizedBox(height: 20),
+            Text('Bem-vindo, Admin!'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// PAGINA HOME DO USER
+class UserHomePage extends StatelessWidget {
+  final String token;
+
+  UserHomePage({required this.token});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('User Home'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout), // Ícone de logout
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()), // Navega para a tela de login
+                (Route<dynamic> route) => false, // Remove todas as rotas anteriores
+              );
+            },
+          ),
+        ],
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.network(
+              'https://media.tenor.com/-DY1sCSEXqUAAAAM/sad-cat.gif', // URL da imagem do Usuário
+              width: 200,
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+            SizedBox(height: 20),
+            Text('Bem-vindo, Usuário!'),
+          ],
         ),
       ),
     );

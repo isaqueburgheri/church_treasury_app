@@ -20,11 +20,13 @@ var jwtKey = []byte("1234")
 type User struct {
 	Username string `json:"username"` // Nome de usuário
 	Password string `json:"password"` // Senha do usuário
+	Role     string `json:"role"`     // Role do usuário (admin ou user)
 }
 
 // Estrutura de dados que representa as claims (informações) do token JWT
 type Claims struct {
 	Username           string `json:"username"` // Nome de usuário
+	Role               string `json:"role"`     // Role do usuário
 	jwt.StandardClaims        // Dados padrões do JWT, como data de expiração
 }
 
@@ -67,9 +69,9 @@ func main() {
 			return
 		}
 
-		// Faz uma consulta ao banco de dados para obter o usuário e a senha
+		// Faz uma consulta ao banco de dados para obter o usuário, senha e role
 		var dbUser User
-		err := db.QueryRow("SELECT username, password FROM users WHERE username = $1", user.Username).Scan(&dbUser.Username, &dbUser.Password)
+		err := db.QueryRow("SELECT username, password, role FROM users WHERE username = $1", user.Username).Scan(&dbUser.Username, &dbUser.Password, &dbUser.Role)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"}) // Se não encontrar o usuário, retorna erro de credenciais inválidas
 			return
@@ -85,6 +87,7 @@ func main() {
 		expirationTime := time.Now().Add(24 * time.Hour) // Define o tempo de expiração do token (24 horas)
 		claims := &Claims{
 			Username: user.Username, // Armazena o nome de usuário nas claims
+			Role:     dbUser.Role,   // Armazena a role do usuário nas claims
 			StandardClaims: jwt.StandardClaims{
 				ExpiresAt: expirationTime.Unix(), // Define a data de expiração no formato Unix
 			},

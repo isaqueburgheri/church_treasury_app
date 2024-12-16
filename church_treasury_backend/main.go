@@ -1,99 +1,107 @@
 package main
 
+// Importação dos pacotes necessários
 import (
-	"database/sql"
-	"fmt"
-	"log"
-	"net/http"
-	"time"
+	"database/sql" // Para interagir com o banco de dados
+	"fmt"          // Para formatação de saída
+	"log"          // Para registro de logs de erro
+	"net/http"     // Para manipulação de requests HTTP
+	"time"         // Para manipulação de data e hora
 
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
+	"github.com/dgrijalva/jwt-go" // Biblioteca para criar e validar JWTs
+	"github.com/gin-gonic/gin"    // Framework web para o desenvolvimento da API
+	_ "github.com/lib/pq"         // Driver do PostgreSQL
 )
 
-// Chave secreta para assinatura dos tokens
+// Chave secreta para assinatura dos tokens JWT
 var jwtKey = []byte("1234")
 
-// Estrutura para usuários
+// Estrutura de dados que representa um usuário
 type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username"` // Nome de usuário
+	Password string `json:"password"` // Senha do usuário
 }
 
-// Estrutura do token JWT
+// Estrutura de dados que representa as claims (informações) do token JWT
 type Claims struct {
-	Username string `json:"username"`
-	jwt.StandardClaims
+	Username           string `json:"username"` // Nome de usuário
+	jwt.StandardClaims        // Dados padrões do JWT, como data de expiração
 }
 
-var db *sql.DB
+var db *sql.DB // Declaração do objeto db para conexão com o banco de dados
 
-// Função para conectar ao banco de dados
+// Função para conectar ao banco de dados PostgreSQL
 func connectToDB() {
 	var err error
-	// Atualize com as configurações do seu banco de dados na nuvem
+	// String de conexão com o banco de dados (altere conforme seu banco)
 	connStr := "postgres://postgres:okul8HDCJOaVU2ys@immutably-democratic-moth.data-1.use1.tembo.io:5432/postgres?sslmode=require"
-	db, err = sql.Open("postgres", connStr)
+	db, err = sql.Open("postgres", connStr) // Estabelece a conexão com o banco
 	if err != nil {
-		log.Fatal("Erro ao conectar ao banco de dados: ", err)
+		log.Fatal("Erro ao conectar ao banco de dados: ", err) // Se falhar, exibe erro e encerra
 	}
 
-	// Testando a conexão
+	// Testa a conexão
 	err = db.Ping()
 	if err != nil {
-		log.Fatal("Erro ao conectar ao banco de dados: ", err)
+		log.Fatal("Erro ao conectar ao banco de dados: ", err) // Se falhar, exibe erro e encerra
 	}
-	fmt.Println("Conectado ao banco de dados!")
+	fmt.Println("Conectado ao banco de dados!") // Se tiver sucesso, imprime mensagem
 }
 
+// Função principal que inicializa o servidor web e as rotas
 func main() {
-	// Conectar ao banco de dados
+	// Conecta ao banco de dados
 	connectToDB()
-	defer db.Close()
+	defer db.Close() // Garante que a conexão será fechada ao finalizar a execução
 
+	// Cria um novo roteador Gin
 	r := gin.Default()
 
-	// Rota de login
+	// Define a rota de login (POST /login)
 	r.POST("/login", func(c *gin.Context) {
-		var user User
+		var user User // Cria um objeto User para armazenar os dados recebidos
+
+		// Tenta fazer o parse do corpo da requisição para preencher o objeto user
 		if err := c.ShouldBindJSON(&user); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos"}) // Se falhar, retorna erro de dados inválidos
 			return
 		}
 
-		// Validação de usuário fictício (substituir por verificação no banco)
+		// Faz uma consulta ao banco de dados para obter o usuário e a senha
 		var dbUser User
-		err := db.QueryRow("SELECT username, password_hash FROM users WHERE username = $1", user.Username).Scan(&dbUser.Username, &dbUser.Password)
+		err := db.QueryRow("SELECT username, password FROM users WHERE username = $1", user.Username).Scan(&dbUser.Username, &dbUser.Password)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"}) // Se não encontrar o usuário, retorna erro de credenciais inválidas
 			return
 		}
 
-		// Aqui você pode comparar a senha (se necessário, usar bcrypt)
+		// Verifica se a senha fornecida corresponde à senha no banco de dados
 		if dbUser.Password != user.Password {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"}) // Se a senha for diferente, retorna erro
 			return
 		}
 
-		// Gerar token JWT
-		expirationTime := time.Now().Add(24 * time.Hour)
+		// Se as credenciais estiverem corretas, gera um token JWT
+		expirationTime := time.Now().Add(24 * time.Hour) // Define o tempo de expiração do token (24 horas)
 		claims := &Claims{
-			Username: user.Username,
+			Username: user.Username, // Armazena o nome de usuário nas claims
 			StandardClaims: jwt.StandardClaims{
-				ExpiresAt: expirationTime.Unix(),
+				ExpiresAt: expirationTime.Unix(), // Define a data de expiração no formato Unix
 			},
 		}
+
+		// Cria um novo token com as claims e a chave secreta
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		tokenString, err := token.SignedString(jwtKey)
+		tokenString, err := token.SignedString(jwtKey) // Assina o token com a chave secreta
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao gerar token"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao gerar token"}) // Se falhar ao gerar o token, retorna erro
 			return
 		}
 
+		// Retorna o token gerado como resposta
 		c.JSON(http.StatusOK, gin.H{"token": tokenString})
 	})
 
-	// Iniciar o servidor na porta 8080
+	// Inicia o servidor web na porta 8080
 	r.Run(":8080")
 }

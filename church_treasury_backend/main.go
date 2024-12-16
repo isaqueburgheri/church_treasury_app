@@ -6,7 +6,8 @@ import (
 	"fmt"          // Para formatação de saída
 	"log"          // Para registro de logs de erro
 	"net/http"     // Para manipulação de requests HTTP
-	"time"         // Para manipulação de data e hora
+	"os"
+	"time" // Para manipulação de data e hora
 
 	"github.com/dgrijalva/jwt-go" // Biblioteca para criar e validar JWTs
 	"github.com/gin-gonic/gin"    // Framework web para o desenvolvimento da API
@@ -106,5 +107,6 @@ func main() {
 	})
 
 	// Inicia o servidor web na porta 8080
-	r.Run(":8080")
+	r.Run(":" + os.Getenv("PORT")) // usa a porta fornecida pelo Heroku
+
 }

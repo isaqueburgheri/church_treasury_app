@@ -36,19 +36,23 @@ var db *sql.DB // Declaração do objeto db para conexão com o banco de dados
 // Função para conectar ao banco de dados PostgreSQL
 func connectToDB() {
 	var err error
-	// String de conexão com o banco de dados (altere conforme seu banco)
-	connStr := "postgres://postgres:okul8HDCJOaVU2ys@immutably-democratic-moth.data-1.use1.tembo.io:5432/postgres?sslmode=require"
-	db, err = sql.Open("postgres", connStr) // Estabelece a conexão com o banco
+	// Usa a variável de ambiente DATABASE_URL, se definida, ou um valor padrão
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		log.Fatal("A variável de ambiente DATABASE_URL não foi configurada")
+	}
+
+	db, err = sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal("Erro ao conectar ao banco de dados: ", err) // Se falhar, exibe erro e encerra
+		log.Fatal("Erro ao conectar ao banco de dados: ", err)
 	}
 
 	// Testa a conexão
 	err = db.Ping()
 	if err != nil {
-		log.Fatal("Erro ao conectar ao banco de dados: ", err) // Se falhar, exibe erro e encerra
+		log.Fatal("Erro ao conectar ao banco de dados: ", err)
 	}
-	fmt.Println("Conectado ao banco de dados!") // Se tiver sucesso, imprime mensagem
+	fmt.Println("Conectado ao banco de dados!")
 }
 
 // Função principal que inicializa o servidor web e as rotas
@@ -107,6 +111,9 @@ func main() {
 	})
 
 	// Inicia o servidor web na porta 8080
-	r.Run(":" + os.Getenv("PORT")) // usa a porta fornecida pelo Heroku
+	// r.Run(":8080") // porta fixa
+
+	// Inicia o servidor web na porta fornecida pela plataforma
+	r.Run(":" + os.Getenv("PORT"))
 
 }

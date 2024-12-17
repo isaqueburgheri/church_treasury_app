@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
     final password = _passwordController.text;
 
     try {
-final url = 'https://tesouraria-app-go.herokuapp.com/login'; // URL da API de login
+final url = 'http://10.2.3.221:8080/login'; // URL da API de login
 final response = await http.post(
   Uri.parse(url),
   headers: {'Content-Type': 'application/json'},

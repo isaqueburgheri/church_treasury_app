@@ -33,6 +33,9 @@ class _LoginPageState extends State<LoginPage> {
     final password = _passwordController.text;
 
     try {
+//local      
+// final url = 'http://10.2.3.221:8080/login'; // URL da API de login
+// nuvem
 final url = 'http://10.2.3.221:8080/login'; // URL da API de login
 final response = await http.post(
   Uri.parse(url),

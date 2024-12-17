@@ -36,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
 //local      
 // final url = 'http://10.2.3.221:8080/login'; // URL da API de login
 // nuvem
-final url = 'http://10.2.3.221:8080/login'; // URL da API de login
+final url = 'https://church-treasury-app.onrender.com/login'; // URL da API de login
 final response = await http.post(
   Uri.parse(url),
   headers: {'Content-Type': 'application/json'},

@@ -61,7 +61,7 @@ func main() {
 	connectToDB()
 	defer db.Close() // Garante que a conexão será fechada ao finalizar a execução
 
-	// Configurar o roteador Gin
+	// Criando uma instância do Gin
 	r := gin.Default()
 
 	// Define a rota de login (POST /login)
@@ -110,11 +110,13 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"token": tokenString})
 	})
 
-	// Inicia o servidor web na porta 10000
-	port := "10000" // Definindo a porta fixamente como 10000
-	fmt.Println("Iniciando servidor na porta: ", port)
+	// Definindo a porta a partir da variável de ambiente, ou 4000 como padrão
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "10000" // Porta padrão, caso a variável de ambiente não esteja configurada
+	}
 
-	// Escutar em :10000
+	// Iniciando o servidor na porta definida
 	if err := r.Run(":" + port); err != nil {
 		log.Fatal("Erro ao iniciar o servidor:", err)
 	}

@@ -114,5 +114,10 @@ func main() {
 	// r.Run(":8080") // porta fixa
 
 	// Inicia o servidor web na porta fornecida pela plataforma
-	r.Run(":" + os.Getenv("PORT"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("A variável de ambiente PORT não foi configurada")
+	}
+	fmt.Println("Iniciando servidor na porta: ", port)
+	r.Run(":" + port)
 }

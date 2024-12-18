@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'consultar_relatorios.dart';
 import 'envio_comprovantes.dart';
+import 'package:church_treasury_app/main.dart'; 
+
 
 class UserHomePage extends StatelessWidget {
   final String token; // Recebe o token para repassá-lo às próximas telas
@@ -23,7 +25,11 @@ class UserHomePage extends StatelessWidget {
             onPressed: () async {
               final shouldExit = await _showExitConfirmation(context);
               if (shouldExit ?? false) {
-                Navigator.pop(context); // Volta para a tela de login
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyApp()), // Volta para a tela de login
+                  (route) => false, // Remove todas as rotas anteriores
+                );
               }
             },
           ),
@@ -82,8 +88,8 @@ class UserHomePage extends StatelessWidget {
       ),
     );
   }
-  
-  // botao de logoff
+
+  // Botão de logoff com confirmação
   Future<bool?> _showExitConfirmation(BuildContext context) async {
     return showDialog<bool>(
       context: context,

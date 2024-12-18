@@ -6,6 +6,9 @@ import (
 	"fmt"          // Para formatação de saída
 	"log"          // Para registro de logs de erro
 	"net/http"     // Para manipulação de requests HTTP
+	"strings"
+
+	// Para manipulação de strings
 	"os"
 	"time" // Para manipulação de data e hora
 
@@ -53,6 +56,25 @@ func connectToDB() {
 		log.Fatal("Erro ao conectar ao banco de dados: ", err)
 	}
 	fmt.Println("Conectado ao banco de dados!")
+}
+
+// Função para enviar o POST e manter o servidor ativo
+func keepServerAlive() {
+	for {
+		// Define o tempo de espera entre os POSTs
+		time.Sleep(10 * time.Minute) // Envia um POST a cada 10 minutos
+
+		// Envia a requisição POST para manter o servidor ativo
+		resp, err := http.Post("https://church-treasury-app.onrender.com/login",
+			"application/json",
+			strings.NewReader(`{"username": "rocky", "password": "balboa"}`))
+		if err != nil {
+			log.Println("Erro ao enviar POST:", err)
+			continue
+		}
+		defer resp.Body.Close()
+		log.Println("Requisição POST enviada com sucesso, status:", resp.Status)
+	}
 }
 
 // Função principal que inicializa o servidor web e as rotas

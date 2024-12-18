@@ -132,8 +132,8 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"token": tokenString})
 	})
 
-	r.Run(":10000") // porta fixa
+	//r.Run(":10000") // porta fixa
 	// Inicia o servidor web na porta fornecida pela plataforma
-	//r.Run(":" + os.Getenv("PORT"))
+	r.Run(":" + os.Getenv("PORT"))
 
 }

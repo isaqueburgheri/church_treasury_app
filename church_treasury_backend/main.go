@@ -114,19 +114,5 @@ func main() {
 	// r.Run(":8080") // porta fixa
 
 	// Inicia o servidor web na porta fornecida pela plataforma
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080" // Porta padrão caso a variável PORT não esteja configurada
-		fmt.Println("A variável de ambiente PORT não foi definida. Usando a porta padrão 8080.")
-	}
-	fmt.Println("Iniciando servidor na porta:", port)
-	err := r.Run(":" + port)
-	if err != nil {
-		log.Fatal("Erro ao iniciar o servidor:", err)
-	}
-	fmt.Println("Tentando conectar ao banco de dados...")
-	connectToDB()
-
-	fmt.Println("Banco de dados conectado com sucesso. Iniciando servidor web...")
-
+	r.Run(":" + os.Getenv("PORT"))
 }

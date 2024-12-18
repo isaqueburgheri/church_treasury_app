@@ -113,29 +113,6 @@ func main() {
 	// Inicia o servidor web na porta 8080
 	// r.Run(":8080") // porta fixa
 
-	//ping no servidor pra mante-lo ativo
-	func main() {
-		// Endpoint principal
-		http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, "pong")
-		})
-	
-		// Goroutine para auto-ping
-		go func() {
-			for {
-				resp, err := http.Get("https://church-treasury-app.onrender.com/login")
-				if err != nil {
-					fmt.Println("Erro no keep-alive:", err)
-				} else {
-					resp.Body.Close()
-					fmt.Println("Keep-alive enviado com sucesso")
-				}
-				time.Sleep(1 * time.Minute)
-			}
-		}
-
-
-
 	// Inicia o servidor web na porta fornecida pela plataforma
 	port := os.Getenv("PORT")
 	if port == "" {

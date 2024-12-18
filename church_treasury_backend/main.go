@@ -61,7 +61,7 @@ func main() {
 	connectToDB()
 	defer db.Close() // Garante que a conexão será fechada ao finalizar a execução
 
-	// Cria um novo roteador Gin
+	// Configurar o roteador Gin
 	r := gin.Default()
 
 	// Define a rota de login (POST /login)
@@ -110,14 +110,22 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"token": tokenString})
 	})
 
-	// Inicia o servidor web na porta 8080
-	// r.Run(":8080") // porta fixa
-
-	// Inicia o servidor web na porta fornecida pela plataforma
+	// Configurar a porta
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Fatal("A variável de ambiente PORT não foi configurada")
+		port = "10000" // Porta padrão do Render, caso não esteja definida
 	}
-	fmt.Println("Iniciando servidor na porta: ", port)
-	r.Run(":" + port)
+
+	// Define a rota principal (GET /)
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "Hello, Render!"})
+	})
+
+	// Escutar em 0.0.0.0:<port>
+	bindAddress := fmt.Sprintf("0.0.0.0:%s", port)
+	fmt.Println("Iniciando o servidor em:", bindAddress)
+
+	if err := r.Run(bindAddress); err != nil {
+		log.Fatal("Erro ao iniciar o servidor:", err)
+	}
 }

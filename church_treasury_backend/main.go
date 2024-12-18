@@ -110,22 +110,12 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"token": tokenString})
 	})
 
-	// Configurar a porta
+	// Inicia o servidor web na porta fornecida pela plataforma
+	r.Run(":" + os.Getenv("PORT"))
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "10000" // Porta padrão do Render, caso não esteja definida
+		log.Fatal("A variável de ambiente PORT não foi configurada")
 	}
-
-	// Define a rota principal (GET /)
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "Hello, Render!"})
-	})
-
-	// Escutar em 0.0.0.0:<port>
-	bindAddress := fmt.Sprintf("0.0.0.0:%s", port)
-	fmt.Println("Iniciando o servidor em:", bindAddress)
-
-	if err := r.Run(bindAddress); err != nil {
-		log.Fatal("Erro ao iniciar o servidor:", err)
-	}
+	fmt.Println("Iniciando servidor na porta: ", port)
+	r.Run(":" + port)
 }

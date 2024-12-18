@@ -29,7 +29,7 @@ class AdminHomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.network(
-              'https://media.tenor.com/lWGkicznMTsAAAAM/robert-deniro-meet-the-fockers.gif', 
+              'https://media1.giphy.com/media/gfZ9ClheLUDQKIJmEH/200w.gif', 
               width: 300,
               height: 200,
               fit: BoxFit.cover,

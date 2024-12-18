@@ -29,7 +29,7 @@ class UserHomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.network(
-              'https://cdn.dribbble.com/users/100482/screenshots/1552917/poweruser_dribbble.gif',
+              'https://media.tenor.com/-DY1sCSEXqUAAAAM/sad-cat.gif',
               width: 200,
               height: 200,
               fit: BoxFit.cover,

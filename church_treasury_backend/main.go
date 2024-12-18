@@ -110,14 +110,8 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"token": tokenString})
 	})
 
-	// Definindo a porta a partir da variável de ambiente, ou 4000 como padrão
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "10000" // Porta padrão, caso a variável de ambiente não esteja configurada
-	}
+	r.Run(":10000") // porta fixa
+	// Inicia o servidor web na porta fornecida pela plataforma
+	//r.Run(":" + os.Getenv("PORT"))
 
-	// Iniciando o servidor na porta definida
-	if err := r.Run(":" + port); err != nil {
-		log.Fatal("Erro ao iniciar o servidor:", err)
-	}
 }

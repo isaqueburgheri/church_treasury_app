@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:church_treasury_app/main.dart';
+import '../login/LoginPage.dart';
 import 'consultar_relatorios.dart';
 import 'envio_comprovantes.dart';
-import 'package:church_treasury_app/main.dart'; 
-import '../login/LoginPage.dart';
-
-
+import 'FAQPage.dart';
+import 'MessagePage.dart';
 
 class UserHomePage extends StatelessWidget {
   final String token; // Recebe o token para repassá-lo às próximas telas
@@ -80,6 +80,38 @@ class UserHomePage extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) =>
                           EnvioComprovantesPage(token: token),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(height: 16),
+              ElevatedButton.icon(
+                icon: Icon(Icons.chat),
+                label: Text('Chat de Mensagens'),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MessagePage(token: token),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(height: 16),
+              ElevatedButton.icon(
+                icon: Icon(Icons.help),
+                label: Text('FAQ'),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FAQPage(),
                     ),
                   );
                 },

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'MessageDetailPage.dart';
-import 'UserHomePage.dart'; // Importando a tela UserHomePage
+import 'package:church_treasury_app/pages/user/UserHomePage.dart'; 
 
 class MessagePage extends StatelessWidget {
   final String token; // Recebe o token para repassá-lo às próximas telas

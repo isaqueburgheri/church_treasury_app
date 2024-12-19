@@ -18,6 +18,17 @@ class _LoginPageState extends State<LoginPage> {
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
+    // Verificação de usuários offline
+    if (username == 'leh' && password == '3101') {
+      _navigateToHomePage(UserHomePage(token: 'offline_token_user'));
+      return;
+    }
+    if (username == 'admin' && password == '963741') {
+      _navigateToHomePage(AdminHomePage(token: 'offline_token_admin'));
+      return;
+    }
+
+    // Tentativa de login online
     try {
       final url = 'https://church-treasury-app.onrender.com/login';
       final response = await http.post(

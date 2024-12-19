@@ -62,7 +62,7 @@ func connectToDB() {
 func keepServerAlive() {
 	for {
 		// Define o tempo de espera entre os POSTs
-		time.Sleep(10 * time.Minute) // Envia um POST a cada 10 minutos
+		time.Sleep(5 * time.Minute) // Envia um POST a cada 10 minutos
 
 		// Envia a requisição POST para manter o servidor ativo
 		resp, err := http.Post("https://church-treasury-app.onrender.com/login",

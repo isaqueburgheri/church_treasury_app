@@ -1,9 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Importa a biblioteca para formatação de datas
 
 class MessageDetailPage extends StatelessWidget {
   final Map<String, dynamic> message; // Dados da mensagem
 
   MessageDetailPage({required this.message}); // Construtor atualizado
+
+  // Função para formatar a data
+  String formatDate(String rawDate) {
+    try {
+      final DateTime parsedDate =
+          DateTime.parse(rawDate); // Converte o texto em DateTime
+      final DateFormat formatter =
+          DateFormat('dd-MM-yyyy - HH:mm'); // Define o formato
+      return formatter.format(parsedDate); // Retorna a data formatada
+    } catch (e) {
+      return rawDate; // Retorna a data original se houver erro
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +62,7 @@ class MessageDetailPage extends StatelessWidget {
             SizedBox(height: 16),
             // Data de criação
             Text(
-              'Enviado em: ${message['created_at']}',
+              'Enviado em: ${formatDate(message['created_at'])}',
               style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
             ),
             SizedBox(height: 16),

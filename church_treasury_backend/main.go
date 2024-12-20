@@ -108,6 +108,10 @@ func getMensagens(c *gin.Context) {
 
 // Função principal que inicializa o servidor web e as rotas
 func main() {
+
+	// Configura o Gin para o modo de produção (release mode)
+	gin.SetMode(gin.ReleaseMode)
+
 	connectToDB()
 	defer db.Close()
 

@@ -43,6 +43,16 @@ type Mensagem struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
+// Mensagens de erro constantes
+const (
+	errDBConn      = "Erro ao conectar ao banco de dados: "
+	errMsgQuery    = "Erro ao buscar mensagens"
+	errMsgProcess  = "Erro ao processar mensagens"
+	errInvalidData = "Dados inválidos"
+	errInvalidCred = "Credenciais inválidas"
+	errGenToken    = "Erro ao gerar token"
+)
+
 // Função para conectar ao banco de dados PostgreSQL
 func connectToDB() {
 	var err error
@@ -53,12 +63,12 @@ func connectToDB() {
 
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal("Erro ao conectar ao banco de dados: ", err)
+		log.Fatal(errDBConn, err)
 	}
 
 	err = db.Ping()
 	if err != nil {
-		log.Fatal("Erro ao conectar ao banco de dados: ", err)
+		log.Fatal(errDBConn, err)
 	}
 	fmt.Println("Conectado ao banco de dados!")
 }
@@ -67,8 +77,8 @@ func connectToDB() {
 func getMensagens(c *gin.Context) {
 	rows, err := db.Query("SELECT id, nome, congregacao, mensagem, anexo_url, created_at FROM mensagens ORDER BY created_at DESC")
 	if err != nil {
-		log.Println("Erro ao buscar mensagens:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar mensagens"})
+		log.Println(errMsgQuery, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsgQuery})
 		return
 	}
 	defer rows.Close()
@@ -79,8 +89,8 @@ func getMensagens(c *gin.Context) {
 		var mensagem Mensagem
 		err := rows.Scan(&mensagem.ID, &mensagem.Nome, &mensagem.Congregacao, &mensagem.Mensagem, &mensagem.AnexoURL, &mensagem.CreatedAt)
 		if err != nil {
-			log.Println("Erro ao processar mensagem:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao processar mensagens"})
+			log.Println(errMsgProcess, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": errMsgProcess})
 			return
 		}
 		mensagens = append(mensagens, mensagem)
@@ -91,7 +101,6 @@ func getMensagens(c *gin.Context) {
 
 // Função principal que inicializa o servidor web e as rotas
 func main() {
-
 	// Configura o Gin para o modo de produção (release mode)
 	gin.SetMode(gin.ReleaseMode)
 
@@ -102,21 +111,21 @@ func main() {
 
 	// Rota para login
 	r.POST("/login", func(c *gin.Context) {
-		var user User
-		if err := c.ShouldBindJSON(&user); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos"})
+		var user *User = new(User)
+		if err := c.ShouldBindJSON(user); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": errInvalidData})
 			return
 		}
 
 		var dbUser User
 		err := db.QueryRow("SELECT username, password, role FROM users WHERE username = $1", user.Username).Scan(&dbUser.Username, &dbUser.Password, &dbUser.Role)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": errInvalidCred})
 			return
 		}
 
 		if dbUser.Password != user.Password {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": errInvalidCred})
 			return
 		}
 
@@ -132,7 +141,7 @@ func main() {
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		tokenString, err := token.SignedString(jwtKey)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao gerar token"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": errGenToken})
 			return
 		}
 

@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -62,22 +61,6 @@ func connectToDB() {
 		log.Fatal("Erro ao conectar ao banco de dados: ", err)
 	}
 	fmt.Println("Conectado ao banco de dados!")
-}
-
-// Função para enviar o POST e manter o servidor ativo
-func keepServerAlive() {
-	for {
-		time.Sleep(5 * time.Minute)
-		resp, err := http.Post("https://church-treasury-app.onrender.com/login",
-			"application/json",
-			strings.NewReader(`{"username": "rocky", "password": "balboa"}`))
-		if err != nil {
-			log.Println("Erro ao enviar POST:", err)
-			continue
-		}
-		defer resp.Body.Close()
-		log.Println("Requisição POST enviada com sucesso, status:", resp.Status)
-	}
 }
 
 // Handler para buscar mensagens

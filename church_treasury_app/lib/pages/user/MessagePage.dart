@@ -126,14 +126,14 @@ class _MessagePageState extends State<MessagePage> {
                                   : null,
                               onTap: () {
                                 Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => MessageDetailPage(
-                                        token: widget.token,
-                                        messageId: message[
-                                            'id'], // Passa a identificação da mensagem
-                                      ),
-                                    ));
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MessageDetailPage(
+                                      message:
+                                          message, // Passa a mensagem inteira
+                                    ),
+                                  ),
+                                );
                               },
                             ),
                             Divider(color: Colors.white), // Linha divisória

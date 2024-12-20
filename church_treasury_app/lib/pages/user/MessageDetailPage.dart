@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
 class MessageDetailPage extends StatelessWidget {
-  final String token; // Token para autenticação ou outras ações
-  final int messageId; // ID da mensagem, passado da MessagePage
+  final Map<String, dynamic> message; // Dados da mensagem
 
-  MessageDetailPage({required this.token, required this.messageId});
+  MessageDetailPage({required this.message}); // Construtor atualizado
 
   @override
   Widget build(BuildContext context) {
@@ -21,20 +20,50 @@ class MessageDetailPage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Aqui você pode exibir os detalhes da mensagem
+            // Nome do remetente
             Text(
-              'Mensagem Detalhada #$messageId', // Exemplo de exibição do ID da mensagem
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              'Enviado por: ${message['nome']}',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
+            // Congregação (se existir)
+            if (message['congregacao'] != null)
+              Text(
+                'Congregação: ${message['congregacao']}',
+                style: TextStyle(fontSize: 18),
+              ),
+            SizedBox(height: 16),
+            // Mensagem
             Text(
-              'Aqui estão os detalhes da mensagem...',
+              'Mensagem:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text(
+              message['mensagem'],
               style: TextStyle(fontSize: 18),
             ),
-            // Campo para resposta
+            SizedBox(height: 16),
+            // Data de criação
+            Text(
+              'Enviado em: ${message['created_at']}',
+              style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+            ),
+            SizedBox(height: 16),
+            // Anexo (se existir)
+            if (message['anexo_url'] != null)
+              TextButton.icon(
+                onPressed: () {
+                  // Adicione lógica para abrir o anexo
+                  print('Abrir anexo: ${message['anexo_url']}');
+                },
+                icon: Icon(Icons.attach_file),
+                label: Text('Visualizar Anexo'),
+              ),
             SizedBox(height: 32),
+            // Campo para resposta
             TextField(
               decoration: InputDecoration(
                 labelText: 'Sua Resposta',
@@ -44,7 +73,7 @@ class MessageDetailPage extends StatelessWidget {
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                // Lógica para enviar a resposta, por exemplo
+                // Lógica para enviar a resposta
                 print('Resposta enviada');
               },
               child: Text('Enviar Resposta'),

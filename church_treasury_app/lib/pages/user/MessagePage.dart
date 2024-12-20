@@ -62,49 +62,88 @@ class _MessagePageState extends State<MessagePage> {
           },
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: messages.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.emoji_people, size: 50), // Ícone engraçado
-                    SizedBox(height: 16),
-                    Text(
-                      'Que benção, nenhuma mensagem!',
-                      style:
-                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              )
-            : ListView.builder(
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  var message = messages[index];
-                  return ListTile(
-                    title: Text(message['nome']),
-                    subtitle: Text(message['mensagem']),
-                    trailing: message['anexo_url'] != null
-                        ? Icon(Icons.attach_file)
-                        : null,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MessageDetailPage(
-                            token: widget.token,
-                            messageId: message[
-                                'id'], // Passa a identificação da mensagem
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
+      body: Stack(
+        children: [
+          // Background image
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: NetworkImage('https://i.imgur.com/rRq4Kvs.png'),
+                fit: BoxFit.cover, // A imagem cobre toda a tela
               ),
+            ),
+          ),
+          // Content with semi-transparent background
+          Container(
+            color: Colors.black.withOpacity(0.6), // Filtro semitransparente
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: messages.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.emoji_people, size: 50), // Ícone engraçado
+                          SizedBox(height: 16),
+                          Text(
+                            'Que benção, nenhuma mensagem!',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // Texto branco
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        var message = messages[index];
+                        return Column(
+                          children: [
+                            ListTile(
+                              title: Text(
+                                message['nome'], // Campo de nome
+                                style: TextStyle(
+                                  fontWeight: FontWeight
+                                      .bold, // Deixa o nome em negrito
+                                  fontSize: 20, // Aumenta o tamanho da fonte
+                                  color: Colors.white, // Cor do texto
+                                ),
+                              ),
+                              subtitle: Text(
+                                message['mensagem'], // Mensagem
+                                style: TextStyle(
+                                  color: Colors.white, // Cor do texto
+                                ),
+                              ),
+                              trailing: message['anexo_url'] != null
+                                  ? Icon(Icons.attach_file,
+                                      color: Colors
+                                          .white) // Ícone de anexo se houver
+                                  : null,
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => MessageDetailPage(
+                                        token: widget.token,
+                                        messageId: message[
+                                            'id'], // Passa a identificação da mensagem
+                                      ),
+                                    ));
+                              },
+                            ),
+                            Divider(color: Colors.white), // Linha divisória
+                          ],
+                        );
+                      },
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }

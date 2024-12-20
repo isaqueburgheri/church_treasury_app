@@ -1,17 +1,50 @@
 import 'package:flutter/material.dart';
 import 'MessageDetailPage.dart';
-import 'package:church_treasury_app/pages/user/UserHomePage.dart'; 
+import 'package:church_treasury_app/pages/user/UserHomePage.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class MessagePage extends StatelessWidget {
+class MessagePage extends StatefulWidget {
   final String token; // Recebe o token para repassá-lo às próximas telas
 
   MessagePage({required this.token});
 
   @override
-  Widget build(BuildContext context) {
-    // Simulação de mensagens, pode ser substituída por dados reais
-    final List<String> messages = []; // Lista de mensagens (aqui está vazia, mas pode ser dinâmica)
+  _MessagePageState createState() => _MessagePageState();
+}
 
+class _MessagePageState extends State<MessagePage> {
+  List<dynamic> messages = []; // Lista que vai armazenar as mensagens
+
+  // Função para buscar as mensagens da API
+  Future<void> fetchMessages() async {
+    final response = await http.get(
+      Uri.parse(
+          'https://church-treasury-app.onrender.com/api/mensagens'), // Altere para o seu endpoint correto
+      headers: {
+        'Authorization': 'Bearer ${widget.token}'
+      }, // Envia o token no cabeçalho
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        messages = json.decode(response.body);
+      });
+    } else {
+      // Caso ocorra um erro ao buscar as mensagens
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Falha ao carregar mensagens')));
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchMessages(); // Chama a função para buscar as mensagens assim que a tela for carregada
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Mensagens'),
@@ -21,7 +54,9 @@ class MessagePage extends StatelessWidget {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => UserHomePage(token: token), // Navega de volta para a tela principal do usuário
+                builder: (context) => UserHomePage(
+                    token: widget
+                        .token), // Navega de volta para a tela principal do usuário
               ),
             );
           },
@@ -38,7 +73,8 @@ class MessagePage extends StatelessWidget {
                     SizedBox(height: 16),
                     Text(
                       'Que benção, nenhuma mensagem!',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -47,16 +83,21 @@ class MessagePage extends StatelessWidget {
             : ListView.builder(
                 itemCount: messages.length,
                 itemBuilder: (context, index) {
+                  var message = messages[index];
                   return ListTile(
-                    title: Text('Mensagem ${index + 1}'),
-                    subtitle: Text('Data: 12/12/2024'),
+                    title: Text(message['nome']),
+                    subtitle: Text(message['mensagem']),
+                    trailing: message['anexo_url'] != null
+                        ? Icon(Icons.attach_file)
+                        : null,
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => MessageDetailPage(
-                            token: token,
-                            messageId: index, // Passa a identificação da mensagem
+                            token: widget.token,
+                            messageId: message[
+                                'id'], // Passa a identificação da mensagem
                           ),
                         ),
                       );

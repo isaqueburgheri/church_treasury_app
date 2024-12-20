@@ -2,19 +2,17 @@ package main
 
 // Importação dos pacotes necessários
 import (
-	"database/sql" // Para interagir com o banco de dados
-	"fmt"          // Para formatação de saída
-	"log"          // Para registro de logs de erro
-	"net/http"     // Para manipulação de requests HTTP
-	"strings"
-
-	// Para manipulação de strings
+	"database/sql"
+	"fmt"
+	"log"
+	"net/http"
 	"os"
-	"time" // Para manipulação de data e hora
+	"strings"
+	"time"
 
-	"github.com/dgrijalva/jwt-go" // Biblioteca para criar e validar JWTs
-	"github.com/gin-gonic/gin"    // Framework web para o desenvolvimento da API
-	_ "github.com/lib/pq"         // Driver do PostgreSQL
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 // Chave secreta para assinatura dos tokens JWT
@@ -22,24 +20,33 @@ var jwtKey = []byte("1234")
 
 // Estrutura de dados que representa um usuário
 type User struct {
-	Username string `json:"username"` // Nome de usuário
-	Password string `json:"password"` // Senha do usuário
-	Role     string `json:"role"`     // Role do usuário (admin ou user)
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
 }
 
 // Estrutura de dados que representa as claims (informações) do token JWT
 type Claims struct {
-	Username           string `json:"username"` // Nome de usuário
-	Role               string `json:"role"`     // Role do usuário
-	jwt.StandardClaims        // Dados padrões do JWT, como data de expiração
+	Username string `json:"username"`
+	Role     string `json:"role"`
+	jwt.StandardClaims
 }
 
-var db *sql.DB // Declaração do objeto db para conexão com o banco de dados
+var db *sql.DB
+
+// Estrutura para representar as mensagens
+type Mensagem struct {
+	ID          int       `json:"id"`
+	Nome        string    `json:"nome"`
+	Congregacao *string   `json:"congregacao"` // Campo opcional
+	Mensagem    string    `json:"mensagem"`
+	AnexoURL    *string   `json:"anexo_url"` // Campo opcional
+	CreatedAt   time.Time `json:"created_at"`
+}
 
 // Função para conectar ao banco de dados PostgreSQL
 func connectToDB() {
 	var err error
-	// Usa a variável de ambiente DATABASE_URL, se definida, ou um valor padrão
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
 		log.Fatal("A variável de ambiente DATABASE_URL não foi configurada")
@@ -50,7 +57,6 @@ func connectToDB() {
 		log.Fatal("Erro ao conectar ao banco de dados: ", err)
 	}
 
-	// Testa a conexão
 	err = db.Ping()
 	if err != nil {
 		log.Fatal("Erro ao conectar ao banco de dados: ", err)
@@ -61,10 +67,7 @@ func connectToDB() {
 // Função para enviar o POST e manter o servidor ativo
 func keepServerAlive() {
 	for {
-		// Define o tempo de espera entre os POSTs
-		time.Sleep(5 * time.Minute) // Envia um POST a cada 10 minutos
-
-		// Envia a requisição POST para manter o servidor ativo
+		time.Sleep(5 * time.Minute)
 		resp, err := http.Post("https://church-treasury-app.onrender.com/login",
 			"application/json",
 			strings.NewReader(`{"username": "rocky", "password": "balboa"}`))
@@ -77,63 +80,81 @@ func keepServerAlive() {
 	}
 }
 
+// Handler para buscar mensagens
+func getMensagens(c *gin.Context) {
+	rows, err := db.Query("SELECT id, nome, congregacao, mensagem, anexo_url, created_at FROM mensagens ORDER BY created_at DESC")
+	if err != nil {
+		log.Println("Erro ao buscar mensagens:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar mensagens"})
+		return
+	}
+	defer rows.Close()
+
+	var mensagens []Mensagem
+
+	for rows.Next() {
+		var mensagem Mensagem
+		err := rows.Scan(&mensagem.ID, &mensagem.Nome, &mensagem.Congregacao, &mensagem.Mensagem, &mensagem.AnexoURL, &mensagem.CreatedAt)
+		if err != nil {
+			log.Println("Erro ao processar mensagem:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao processar mensagens"})
+			return
+		}
+		mensagens = append(mensagens, mensagem)
+	}
+
+	c.JSON(http.StatusOK, mensagens)
+}
+
 // Função principal que inicializa o servidor web e as rotas
 func main() {
-	// Conecta ao banco de dados
 	connectToDB()
-	defer db.Close() // Garante que a conexão será fechada ao finalizar a execução
+	defer db.Close()
 
-	// Criando uma instância do Gin
 	r := gin.Default()
 
-	// Define a rota de login (POST /login)
+	// Rota para login
 	r.POST("/login", func(c *gin.Context) {
-		var user User // Cria um objeto User para armazenar os dados recebidos
-
-		// Tenta fazer o parse do corpo da requisição para preencher o objeto user
+		var user User
 		if err := c.ShouldBindJSON(&user); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos"}) // Se falhar, retorna erro de dados inválidos
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos"})
 			return
 		}
 
-		// Faz uma consulta ao banco de dados para obter o usuário, senha e role
 		var dbUser User
 		err := db.QueryRow("SELECT username, password, role FROM users WHERE username = $1", user.Username).Scan(&dbUser.Username, &dbUser.Password, &dbUser.Role)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"}) // Se não encontrar o usuário, retorna erro de credenciais inválidas
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"})
 			return
 		}
 
-		// Verifica se a senha fornecida corresponde à senha no banco de dados
 		if dbUser.Password != user.Password {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"}) // Se a senha for diferente, retorna erro
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Credenciais inválidas"})
 			return
 		}
 
-		// Se as credenciais estiverem corretas, gera um token JWT
-		expirationTime := time.Now().Add(24 * time.Hour) // Define o tempo de expiração do token (24 horas)
+		expirationTime := time.Now().Add(24 * time.Hour)
 		claims := &Claims{
-			Username: user.Username, // Armazena o nome de usuário nas claims
-			Role:     dbUser.Role,   // Armazena a role do usuário nas claims
+			Username: user.Username,
+			Role:     dbUser.Role,
 			StandardClaims: jwt.StandardClaims{
-				ExpiresAt: expirationTime.Unix(), // Define a data de expiração no formato Unix
+				ExpiresAt: expirationTime.Unix(),
 			},
 		}
 
-		// Cria um novo token com as claims e a chave secreta
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		tokenString, err := token.SignedString(jwtKey) // Assina o token com a chave secreta
+		tokenString, err := token.SignedString(jwtKey)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao gerar token"}) // Se falhar ao gerar o token, retorna erro
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao gerar token"})
 			return
 		}
 
-		// Retorna o token gerado como resposta
 		c.JSON(http.StatusOK, gin.H{"token": tokenString})
 	})
 
-	//r.Run(":10000") // porta fixa
+	// Nova rota para buscar mensagens
+	r.GET("/api/mensagens", getMensagens)
+
 	// Inicia o servidor web na porta fornecida pela plataforma
 	r.Run(":" + os.Getenv("PORT"))
-
 }

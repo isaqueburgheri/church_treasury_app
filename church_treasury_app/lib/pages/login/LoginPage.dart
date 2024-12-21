@@ -14,23 +14,11 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   String? _errorMessage;
 
-
-  // Off
+  // Função de login
   Future<void> _login() async {
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
-    // Verificação de usuários offline
-    if (username == 'leh' && password == '3101') {
-      _navigateToHomePage(UserHomePage(token: 'offline_token_user'));
-      return;
-    }
-    if (username == 'admin' && password == '963741') {
-      _navigateToHomePage(AdminHomePage(token: 'offline_token_admin'));
-      return;
-    }
-
-    // Tentativa de login online
     try {
       final url = 'https://church-treasury-app.onrender.com/login';
       final response = await http.post(
@@ -65,11 +53,11 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       _showErrorDialog('Erro ao conectar: $e');
     } finally {
-      // Limpa o campo de senha após tentativa
-      _passwordController.clear();
+      _passwordController.clear(); // Limpa o campo de senha após tentativa
     }
   }
 
+  // Função para extrair o papel (role) do token JWT
   Future<String> _getRoleFromToken(String token) async {
     try {
       final parts = token.split('.');
@@ -83,9 +71,9 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  // Função para exibir erro em caso de falha no login
   void _showErrorDialog(String message) {
-    // Limpa o campo de senha ao exibir o erro
-    _passwordController.clear();
+    _passwordController.clear(); // Limpa o campo de senha ao exibir o erro
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -103,6 +91,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  // Função para navegação para a Home Page do usuário ou admin
   void _navigateToHomePage(Widget homePage) {
     Navigator.pushReplacement(
       context,

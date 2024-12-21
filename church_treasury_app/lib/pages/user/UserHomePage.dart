@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:church_treasury_app/main.dart';
+import 'package:jwt_decoder/jwt_decoder.dart'; // Para decodificar o token
 import '../login/LoginPage.dart';
 import 'consultar_relatorios.dart';
 import 'envio_comprovantes.dart';
@@ -13,6 +14,10 @@ class UserHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Decodificar o token e pegar o nome do usuário
+    final decodedToken = JwtDecoder.decode(token);
+    final username = decodedToken['username'] ?? 'Usuário';
+
     return WillPopScope(
       onWillPop: () async {
         final shouldExit = await _showExitConfirmation(context);
@@ -20,7 +25,7 @@ class UserHomePage extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Paz do Senhor, Tesoureiro'),
+          title: Text('Paz do Senhor, $username'), // Exibe o nome do usuário
           centerTitle: true,
           leading: IconButton(
             icon: Icon(Icons.logout),

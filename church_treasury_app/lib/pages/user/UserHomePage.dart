@@ -25,7 +25,8 @@ class UserHomePage extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Paz do Senhor, $username'), // Exibe o nome do usuário
+          title: Text(
+              'Paz do Senhor, $username\nAD Belém - Setor 63 - Tesouraria'), // Atualizado para incluir a congregação e setor
           centerTitle: true,
           leading: IconButton(
             icon: Icon(Icons.logout),
@@ -49,8 +50,9 @@ class UserHomePage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Alterado para exibir o nome do usuário no texto de boas-vindas
               Text(
-                'Bem-vindo!',
+                'Paz do Senhor, $username!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24,

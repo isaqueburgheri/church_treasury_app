@@ -85,25 +85,32 @@ func getMensagens(c *gin.Context) {
 		return
 	}
 
-	// Obtendo o username do token
+	// Obtendo o username e role do token
 	username := claims.Username
+	role := claims.Role
 
-	// Buscando o user_id correspondente ao username
-	var userID int
-	err = db.QueryRow("SELECT id FROM users WHERE username = $1", username).Scan(&userID)
-	if err != nil {
-		log.Println("Erro ao buscar user_id:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar user_id"})
-		return
+	var query string
+	var rows *sql.Rows
+
+	if role == "admin" {
+		// Admin vê todas as mensagens direcionadas a ele (baseado no user_id 0, que representa o admin)
+		query = `
+			SELECT id, nome, congregacao, mensagem, anexo_url, created_at
+			FROM mensagens
+			WHERE user_id = 0 -- Apenas mensagens do admin
+			ORDER BY created_at DESC
+		`
+		rows, err = db.Query(query)
+	} else {
+		// Usuário comum vê mensagens somente do admin (user_id 0), independente de quem enviou
+		query = `
+			SELECT id, nome, congregacao, mensagem, anexo_url, created_at
+			FROM mensagens
+			WHERE user_id = 0 AND (nome = $1) -- Apenas mensagens do admin com nome igual ao username
+			ORDER BY created_at DESC
+		`
+		rows, err = db.Query(query, username)
 	}
-
-	// Consultando as mensagens filtradas pelo user_id
-	rows, err := db.Query(`
-		SELECT id, nome, congregacao, mensagem, anexo_url, created_at
-		FROM mensagens
-		WHERE user_id = $1
-		ORDER BY created_at DESC
-	`, userID)
 
 	if err != nil {
 		log.Println("Erro ao buscar mensagens:", err)

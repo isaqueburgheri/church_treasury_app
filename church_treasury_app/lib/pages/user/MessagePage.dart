@@ -27,17 +27,30 @@ class _MessagePageState extends State<MessagePage> {
           'https://church-treasury-app.onrender.com/api/mensagens'), // Altere para o seu endpoint correto
       headers: {
         'Authorization': 'Bearer ${widget.token}',
-      }, // Envia o token no cabeçalho
+      },
     );
 
     if (response.statusCode == 200) {
       setState(() {
         List<dynamic> allMessages =
             json.decode(response.body); // Recebe todas as mensagens
-        // Filtra as mensagens para exibir apenas as que pertencem ao usuário
-        messages = allMessages.where((message) {
-          return message['nome'] == username; // Filtra pelo nome do usuário
-        }).toList();
+        // Decodifica o token para pegar o role
+        final decodedToken = JwtDecoder.decode(widget.token);
+        String role = decodedToken['role'] ?? ''; // Pode ser 'user' ou 'admin'
+
+        if (role == 'admin') {
+          // Admin verá todas as mensagens com user_id 0 (admin)
+          messages = allMessages.where((message) {
+            return message['user_id'] ==
+                0; // Admin vê todas as mensagens do admin
+          }).toList();
+        } else {
+          // Usuário verá apenas as mensagens do admin (user_id = 0)
+          messages = allMessages.where((message) {
+            return message['user_id'] ==
+                0; // Usuário vê apenas mensagens do admin
+          }).toList();
+        }
         isLoading = false;
       });
     } else {
@@ -118,7 +131,7 @@ class _MessagePageState extends State<MessagePage> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.emoji_people, size: 50),
+                                  Icon(Icons.emoji_emotions, size: 50),
                                   SizedBox(height: 16),
                                   Text(
                                     'Que benção, nenhuma mensagem!',

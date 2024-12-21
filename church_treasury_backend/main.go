@@ -65,7 +65,46 @@ func connectToDB() {
 
 // Handler para buscar mensagens
 func getMensagens(c *gin.Context) {
-	rows, err := db.Query("SELECT id, nome, congregacao, mensagem, anexo_url, created_at FROM mensagens ORDER BY created_at DESC")
+	// Pegando o token JWT do cabeçalho Authorization
+	tokenString := c.GetHeader("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token não fornecido"})
+		return
+	}
+
+	// Remover o "Bearer" do token
+	tokenString = tokenString[7:]
+
+	// Decodificando o token
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token inválido"})
+		return
+	}
+
+	// Obtendo o username do token
+	username := claims.Username
+
+	// Buscando o user_id correspondente ao username
+	var userID int
+	err = db.QueryRow("SELECT id FROM users WHERE username = $1", username).Scan(&userID)
+	if err != nil {
+		log.Println("Erro ao buscar user_id:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar user_id"})
+		return
+	}
+
+	// Consultando as mensagens filtradas pelo user_id
+	rows, err := db.Query(`
+		SELECT id, nome, congregacao, mensagem, anexo_url, created_at
+		FROM mensagens
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+	`, userID)
+
 	if err != nil {
 		log.Println("Erro ao buscar mensagens:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar mensagens"})

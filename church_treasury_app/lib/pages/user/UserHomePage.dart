@@ -26,10 +26,13 @@ class UserHomePage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-              'Paz do Senhor, $username\nAD Belém - Setor 63 - Tesouraria'), // Atualizado para incluir a congregação e setor
+            'AD Belém - Setor 63 - Tesouraria',
+            style: TextStyle(color: Colors.white), // Cor das letras
+          ),
           centerTitle: true,
+          backgroundColor: Colors.black, // Cor de fundo da AppBar
           leading: IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.logout, color: Colors.white), // Cor do ícone
             onPressed: () async {
               final shouldExit = await _showExitConfirmation(context);
               if (shouldExit ?? false) {

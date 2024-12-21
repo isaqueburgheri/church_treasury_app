@@ -18,7 +18,8 @@ class _MessagePageState extends State<MessagePage> {
   List<dynamic> messages = []; // Lista que vai armazenar as mensagens
   bool isLoading = true; // Variável para controlar o estado de carregamento
   String errorMessage = ''; // Variável para armazenar mensagens de erro
-  String username = ''; // Variável para armazenar o nome do usuário
+  int userId = 0; // Variável para armazenar o user_id do usuário logado
+  String username = ''; // Variável para armazenar o nome de usuário
 
   // Função para buscar as mensagens da API
   Future<void> fetchMessages() async {
@@ -27,31 +28,18 @@ class _MessagePageState extends State<MessagePage> {
           'https://church-treasury-app.onrender.com/api/mensagens'), // Altere para o seu endpoint correto
       headers: {
         'Authorization': 'Bearer ${widget.token}',
-      },
+      }, // Envia o token no cabeçalho
     );
 
     if (response.statusCode == 200) {
       setState(() {
         List<dynamic> allMessages =
             json.decode(response.body); // Recebe todas as mensagens
-        // Decodifica o token para pegar o role
-        final decodedToken = JwtDecoder.decode(widget.token);
-        String role = decodedToken['role'] ?? ''; // Pode ser 'user' ou 'admin'
-
-        if (role == 'admin') {
-          // Admin verá todas as mensagens com user_id 0 (admin)
-          messages = allMessages.where((message) {
-            return message['user_id'] ==
-                0; // Admin vê todas as mensagens do admin
-          }).toList();
-        } else {
-          // Usuário verá apenas as mensagens do admin (user_id = 0)
-          messages = allMessages.where((message) {
-            return message['user_id'] ==
-                0; // Usuário vê apenas mensagens do admin
-          }).toList();
-        }
-        isLoading = false;
+        messages = allMessages.where((message) {
+          return message['user_id'] == 0 || message['nome'] == username;
+        }).toList();
+        isLoading =
+            false; // Atualiza o estado para indicar que as mensagens foram carregadas
       });
     } else {
       setState(() {
@@ -65,10 +53,13 @@ class _MessagePageState extends State<MessagePage> {
   @override
   void initState() {
     super.initState();
-    // Decodificar o token e pegar o nome do usuário
+    // Decodificar o token e pegar o user_id e username do usuário
     final decodedToken = JwtDecoder.decode(widget.token);
     setState(() {
-      username = decodedToken['username'] ?? 'Usuário';
+      username =
+          decodedToken['username'] ?? 'Usuário'; // Obtém o nome de usuário
+      print(
+          'Username do usuário logado: $username'); // Agora está correto, imprimindo o nome de usuário
     });
     fetchMessages(); // Chama a função para buscar as mensagens assim que a tela for carregada
   }
@@ -77,7 +68,7 @@ class _MessagePageState extends State<MessagePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Paz do Senhor, $username!'),
+        title: Text('AD Belém - Setor 63 - Tesouraria'),
         backgroundColor: Colors.black, // Cor de fundo da AppBar
         foregroundColor: Colors.white, // Cor do texto da AppBar
         leading: IconButton(

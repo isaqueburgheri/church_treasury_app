@@ -106,7 +106,7 @@ func getMensagens(c *gin.Context) {
 		query = `
 			SELECT id, nome, congregacao, mensagem, anexo_url, created_at
 			FROM mensagens
-			WHERE user_id = 0 AND (nome = $1) -- Apenas mensagens do admin com nome igual ao username
+			WHERE user_id = 0 or (nome = $1) -- Apenas mensagens do admin ou do proprio username logado
 			ORDER BY created_at DESC
 		`
 		rows, err = db.Query(query, username)

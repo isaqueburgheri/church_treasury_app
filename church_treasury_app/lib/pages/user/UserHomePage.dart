@@ -114,7 +114,7 @@ class UserHomePage extends StatelessWidget {
               SizedBox(height: 16),
               ElevatedButton.icon(
                 icon: Icon(Icons.help),
-                label: Text('FAQ'),
+                label: Text('Perguntas Frequentes'),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16.0),
                 ),

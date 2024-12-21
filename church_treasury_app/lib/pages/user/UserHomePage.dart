@@ -20,7 +20,7 @@ class UserHomePage extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Área do Usuário'),
+          title: Text('Paz do Senhor, Tesoureiro'),
           centerTitle: true,
           leading: IconButton(
             icon: Icon(Icons.logout),
@@ -29,7 +29,9 @@ class UserHomePage extends StatelessWidget {
               if (shouldExit ?? false) {
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (context) => MyApp()), // Volta para a tela de login
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          MyApp()), // Volta para a tela de login
                   (route) => false, // Remove todas as rotas anteriores
                 );
               }
@@ -78,8 +80,7 @@ class UserHomePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          EnvioComprovantesPage(token: token),
+                      builder: (context) => EnvioComprovantesPage(token: token),
                     ),
                   );
                 },
@@ -135,13 +136,15 @@ class UserHomePage extends StatelessWidget {
             TextButton(
               child: Text('Não'),
               onPressed: () {
-                Navigator.of(context).pop(false); // Fecha o diálogo e permanece na página
+                Navigator.of(context)
+                    .pop(false); // Fecha o diálogo e permanece na página
               },
             ),
             TextButton(
               child: Text('Sim'),
               onPressed: () {
-                Navigator.of(context).pop(true); // Fecha o diálogo e volta para login
+                Navigator.of(context)
+                    .pop(true); // Fecha o diálogo e volta para login
               },
             ),
           ],

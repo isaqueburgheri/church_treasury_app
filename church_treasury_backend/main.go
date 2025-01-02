@@ -46,7 +46,7 @@ type Mensagem struct {
 // Função para conectar ao banco de dados PostgreSQL
 func connectToDB() {
 	var err error
-	connStr := os.Getenv("DATABASE_URL")
+	connStr := os.Getenv("postgresql://postgres:okul8HDCJOaVU2ys@immutably-democratic-moth.data-1.use1.tembo.io:5432/postgres")
 	if connStr == "" {
 		log.Fatal("A variável de ambiente DATABASE_URL não foi configurada")
 	}
